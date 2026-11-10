@@ -1,0 +1,45 @@
+# Copy this file to terraform.tfvars and fill in the REPLACE_WITH_* values.
+# terraform.tfvars is gitignored (it holds deployment-specific identifiers such as your state bucket);
+# only this .example template is committed, so published copies never carry a real bucket name.
+
+name_prefix    = "REPLACE_WITH_NAME_PREFIX" # e.g. sample-hpinf-gw
+primary_region = "us-east-1"
+
+# Regions the central LiteLLM routes across. Each must already be deployed via its region root (and thus
+# discoverable in SSM). To add one: deploy its region root, append it here, add an aws alias in providers.tf
+# and a region-peering block in main.tf.
+regions = ["us-east-1", "us-east-2"]
+
+# Remote state of the PRIMARY region root (to read its cluster/VPC details).
+# Fill from 00-bootstrap outputs -- this must be the state bucket YOU own (do not leave a literal name here).
+state_bucket      = "REPLACE_WITH_BOOTSTRAP_STATE_BUCKET"
+state_region      = "us-east-1"
+primary_state_key = "region-us-east-1/terraform.tfstate"
+
+# Affinity-first routing: session affinity pins each conversation to its cache-warm region; least-busy
+# places only NEW sessions and spills on failure.
+routing_strategy = "least-busy"
+
+# Entry ALB TLS: null => generate a self-signed cert for entry_domain (sample default; curl -k). Supply an
+# ACM cert ARN for a real cert.
+acm_certificate_arn = null
+entry_domain        = "inference.hpinf.internal"
+
+# Flip to true to launch the SSM bastion for testing the private entry ALB from local, then back to false.
+enable_bastion = true
+
+# Central Amazon Managed Grafana (one AMP datasource per region). Requires IAM Identity Center (AWS_SSO).
+# FIRST apply is two-phase (the grafana provider token is created in this apply):
+#   terraform apply -target=module.observability_global   # workspace + token
+#   terraform apply                                        # datasources + the rest
+# Central Grafana requires IAM Identity Center (AWS_SSO), which is NOT enabled in this account, so it is
+# OFF for now (per-region AMP still deploys; enable once Identity Center is set up).
+enable_grafana = false
+
+# Catalog MUST match every region root's catalog (keys + served_model_name + litellm_alias).
+models = {
+  qwen7b-awq = {
+    served_model_name = "qwen2.5-7b-awq"
+    litellm_alias     = "qwen2.5-7b-awq"
+  }
+}

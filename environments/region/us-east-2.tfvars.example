@@ -1,0 +1,41 @@
+# ADDED region: us-east-2 (CMH).
+# Adjacent to us-east-1, so the cross-region spill path (central LiteLLM -> this region over peering) is
+# cheap and low-latency. To add more regions, copy this file, bump the CIDR, and append to the platform root.
+name_prefix    = "sample-hpinf-use2"
+region         = "us-east-2"
+primary_region = "us-east-1"
+
+# Must not overlap the primary VPC (10.10.0.0/16) or any other region.
+vpc_cidr = "10.20.0.0/16"
+az_count = 2
+
+gpu_instance_type  = "ml.g5.4xlarge"
+gpu_instance_types = ["ml.g5.4xlarge", "ml.g5.8xlarge"]
+gpu_instance_count = 0
+
+# Deploy with observability OFF first (breaks the first-deploy deadlock: the endpoints reference the AMP
+# endpoint, but the observability add-on cannot go ACTIVE until a GPU node exists). Flip ON and re-apply.
+enable_observability = true
+
+# Allow the PRIMARY VPC (central LiteLLM) to reach this region's model ALBs over VPC peering.
+client_cidrs = ["10.10.0.0/16"]
+
+# Identical catalog to the primary (keys + served_model_name + litellm_alias) so deployments line up.
+models = {
+  qwen7b-awq = {
+    source_type       = "huggingface"
+    model_id          = "Qwen/Qwen2.5-7B-Instruct-AWQ"
+    served_model_name = "qwen2.5-7b-awq"
+    litellm_alias     = "qwen2.5-7b-awq"
+    instance_types    = ["ml.g5.4xlarge", "ml.g5.8xlarge"]
+    instance_type     = "ml.g5.4xlarge"
+    routing_strategy  = "prefixaware"
+    max_model_len     = 8192
+    autoscaling = {
+      min_replicas     = 1
+      max_replicas     = 1
+      prometheus_query = "sum(vllm:num_requests_waiting)"
+      target_value     = 10
+    }
+  }
+}

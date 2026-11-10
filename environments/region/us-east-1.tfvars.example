@@ -1,0 +1,41 @@
+# PRIMARY region: us-east-1.
+# This region also hosts the platform root (central LiteLLM + Aurora + Redis + entry ALB + bastion).
+name_prefix    = "sample-hpinf-use1"
+region         = "us-east-1"
+primary_region = "us-east-1" # primary == self
+
+# Primary VPC. Convention: primary 10.10.0.0/16; each added region uses a distinct /16 (10.20, 10.30, ...).
+vpc_cidr = "10.10.0.0/16"
+az_count = 3
+
+# Single-A10G GPU group for the 7B AWQ model. 0 = Karpenter elastic scale-from-zero.
+gpu_instance_type  = "ml.g5.4xlarge"
+gpu_instance_types = ["ml.g5.4xlarge", "ml.g5.8xlarge"]
+gpu_instance_count = 0
+
+# Fresh cluster: deploy with observability OFF first (so a GPU node comes up), then flip ON and re-apply.
+enable_observability = true
+
+# Primary region: its own VPC CIDR is always allowed to the model ALBs, so no extra client CIDRs needed.
+client_cidrs = []
+
+# Catalog MUST match every other region's catalog and the platform root's catalog (same keys +
+# served_model_name + litellm_alias) so the per-region deployments line up under each alias.
+models = {
+  qwen7b-awq = {
+    source_type       = "huggingface"
+    model_id          = "Qwen/Qwen2.5-7B-Instruct-AWQ"
+    served_model_name = "qwen2.5-7b-awq"
+    litellm_alias     = "qwen2.5-7b-awq"
+    instance_types    = ["ml.g5.4xlarge", "ml.g5.8xlarge"]
+    instance_type     = "ml.g5.4xlarge"
+    routing_strategy  = "prefixaware"
+    max_model_len     = 8192
+    autoscaling = {
+      min_replicas     = 1
+      max_replicas     = 1
+      prometheus_query = "sum(vllm:num_requests_waiting)"
+      target_value     = 10
+    }
+  }
+}

@@ -1,0 +1,51 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+.terraform.lock.hcl
+
+# Terraform variable files may contain account-specific values / secrets
+*.tfvars
+*.tfvars.json
+# ...but keep committed, sanitized examples
+!*.tfvars.example
+!tfvars/*.example.tfvars
+
+# Local secrets / credentials (belt and suspenders — nothing secret should ever be committed)
+*.pem
+*.key
+.env
+.env.*
+secrets.*
+
+logs
+tools
+scan-report*
+
+# Generated at deploy time
+test-me.md
+
+# Scanner output
+.scan-results/
+*.sarif
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+tmp
+venv
+DEPLOY-STATE.md
+test_code
+scan-report.json

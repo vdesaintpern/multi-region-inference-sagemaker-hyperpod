@@ -1,0 +1,10 @@
+# SSM jumpbox for the us-east-2 deployment. Reach the internal LiteLLM ALB (and any other in-VPC
+# endpoint) via Session Manager port forwarding. Apply/destroy independently of region-primary.
+region      = "us-east-2"
+name_prefix = "sample-hpinf-use2"
+
+# From the region-primary deployment (sample-hpinf-use2-vpc, private subnet in us-east-2a).
+vpc_id    = "YOUR_VPC_ID"
+subnet_id = "YOUR_SUBNET_ID"
+
+instance_type = "t3.micro"
