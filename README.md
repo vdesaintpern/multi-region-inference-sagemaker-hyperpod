@@ -15,8 +15,7 @@ region; regions never talk to each other).
 > **Sample / non-production code.** This project demonstrates a reference architecture. It is **not
 > production-ready** and must not be deployed to production without additional security testing and
 > hardening. Deploying it creates continuously-running GPU capacity that **incurs real cost** (see
-> below). Several resource shapes depend on your installed HyperPod operator version — see the
-> [VERIFY checklist](#verify-checklist).
+> below).
 
 ## What it builds
 
